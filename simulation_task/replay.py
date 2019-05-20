@@ -18,7 +18,7 @@ class ReplayMemory(object):
         self.length = np.ones(self.capacity, dtype=int)*max_length
         #Arrange the actions
         if start_clicks[0] == None:
-            self.clicks[:, 0] = np.random.randint(action_num, size = self.capacity)  
+            self.clicks[:, 0] = np.random.randint(action_num-1, size = self.capacity)  
         else:
             self.clicks[:, 0] = start_actions
             assert len(self.actions[:, 0]) == self.capacity
@@ -44,7 +44,7 @@ class ReplayMemory(object):
             _, hidden = self.env.step(click_batch, hidden)
         outputk = self.env.next_click(hidden, action, len(click_batch))
         reward = self.env.reward(hidden, outputk)
-        x = torch.multinomial(outputk, 1).squeeze(1)
+        x = torch.multinomial(outputk, 1)
         return x, hidden, reward
              
     #Generate from state                
@@ -54,23 +54,47 @@ class ReplayMemory(object):
             click_batch = self.clicks[stidx: stidx + batch_size]
             click_batch = torch.from_numpy(click_batch).cuda()
             action, hidden_agent = self.select_action(click_batch, None, True)
-            nextclick, hidden_env, reward = self.next_click(click_batch, action, None, True)
-            index = np.where(nextclick == self.env.end)[0]
+            click_batch, hidden_env, reward = self.next_click(click_batch, action, None, True)
+            index = np.where(click_batch.data.cpu().numpy() == self.env.end)[0]
             self.length[stidx + index] = 1
             for i in range(self.max_length-1):
-                self.clicks[stidx: stidx + batch_size, i+1] = nextclick.data.cpu().numpy()
+                self.clicks[stidx: stidx + batch_size, i+1] = click_batch.squeeze(1).data.cpu().numpy()
                 self.rewards[stidx: stidx + batch_size, i] = reward.data.cpu().numpy()
                 # Agent
                 action, hidden_agent = self.select_action(click_batch, hidden_agent)
                 # Environment
-                nextclick, hidden_env, reward = self.next_click(click_batch, action, hidden_env)
+                click_batch, hidden_env, reward = self.next_click(click_batch, action, hidden_env)
                 #Not adding for the ended states
-                index = np.where(nextclick == self.env.end)[0]
+                index = np.where(click_batch.data.cpu().numpy() == self.env.end)[0]
                 for j in index:
                     if self.length[stidx + j] == self.max_length: # The length hasn't been assigned
-                        self.length[stidx + j] = i + 1
+                        self.length[stidx + j] = i + 2
             self.rewards[stidx: stidx + batch_size, self.max_length-1] = reward.data.cpu().numpy() 
-                                               
+           
+    def gen_sample_test(self, batch_size):
+        for stidx in range(0, self.capacity, batch_size):
+            #Start clicks
+            click_batch = self.clicks[stidx: stidx + batch_size]
+            click_batch = torch.from_numpy(click_batch).cuda()
+            action = self.select_action_testagent((click_batch, np.ones(len(click_batch), dtype=int)))
+            click_batch, hidden_env, reward = self.next_click(click_batch, action, None, True)
+            index = np.where(nextclick == self.env.end)[0]
+            self.length[stidx + index] = 1
+            for i in range(self.max_length-1):
+                self.clicks[stidx: stidx + batch_size, i+1] = click_batch.squeeze(1).data.cpu().numpy()
+                self.rewards[stidx: stidx + batch_size, i] = reward.data.cpu().numpy()
+                # Agent
+                clicklist_batch = torch.from_numpy(self.clicks).cuda()
+                action = self.select_action_testagent((clicklist_batch, (i+2)*np.ones(len(clicklist_batch), dtype=int)))
+                # Environment
+                click_batch, hidden_env, reward = self.next_click(click_batch, action, hidden_env)
+                #Not adding for the ended states
+                index = np.where(click_batch.data.cpu().numpy() == self.env.end)[0]
+                for j in index:
+                    if self.length[stidx + j] == self.max_length: # The length hasn't been assigned
+                        self.length[stidx + j] = i + 2
+            self.rewards[stidx: stidx + batch_size, self.max_length-1] = reward.data.cpu().numpy() 
+                                              
     def write_sample(self, filename_click, filename_reward, num_items, add_end=True): #write reward and actions
         file_click = open(os.path.join('',filename_click),'a+') 
         file_reward = open(os.path.join('',filename_reward),'a+') 
