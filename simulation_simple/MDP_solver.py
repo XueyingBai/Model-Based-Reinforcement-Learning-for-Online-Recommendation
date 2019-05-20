@@ -1,7 +1,7 @@
 import numpy as np
 import time as time
 import scipy.sparse as sp
-from env_simu import MRP
+from MDP import MRP
 
 class LP(MRP):
     def __init__(self, states, transitions, actions, w, usr_feature, discount=0.99, skip_check=False):
@@ -40,7 +40,8 @@ class LP(MRP):
     def Get_reward(self):
         for i in range(len(self.A)):
             for j in range(len(self.T)):
-                self.Reward[i, j] = self.Immediate_reward(self.usr, j, i)
+                #self.Reward[i, j] = self.Immediate_reward(self.usr, j, i)
+                self.Reward[i, j] = self.Immediate_reward(i)
     
     def bellmanOperator(self, V=None):
         # Apply the Bellman operator on the value function.
@@ -139,7 +140,8 @@ class PolicyIteration(MRP):
     def Get_reward(self):
         for i in range(len(self.A)):
             for j in range(len(self.T)):
-                self.Reward[i, j] = self.Immediate_reward(self.usr, j, i)
+                #self.Reward[i, j] = self.Immediate_reward(self.usr, j, i)
+                self.Reward[i, j] = self.Immediate_reward(i)
 
     def bellmanOperator(self, V=None):
         # Apply the Bellman operator on the value function.
