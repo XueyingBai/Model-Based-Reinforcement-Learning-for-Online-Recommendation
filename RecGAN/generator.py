@@ -25,16 +25,8 @@ class Generator(nn.Module):
             self.embedding.init_embedding_weights(feature_vec, embed_dim)
         '''
         self.encoder = eval(self.encoder_type)(self.batch_size, embed_dim, self.enc_lstm_dim, self.model, self.n_layers, 0)
-        #self.enc2out = nn.Linear(self.enc_lstm_dim, self.n_classes)
         self.enc2out = nn.Linear(self.enc_lstm_dim, embed_dim)
-        #self.enc2pur = nn.Linear(self.enc_lstm_dim, 2)
         self.enc2rewd = nn.Linear(self.enc_lstm_dim, embed_dim)
-        #self.enc2out = torch.randn(embed_dim, self.enc_lstm_dim, requires_grad = True).cuda()
-        #self.outbias = torch.randn(embed_dim, 1, requires_grad = True).cuda()
-        #self.outbias2 = torch.randn(self.n_classes, requires_grad = True).cuda()
-        #self.enc2rewd = torch.randn(embed_dim, self.enc_lstm_dim, requires_grad = True).cuda()
-        #self.rewdbias = torch.randn(embed_dim, 1, requires_grad = True).cuda()
-        #self.rewdbias2 = torch.randn(1, requires_grad = True).cuda()
         if init:
             self.init_params()
     
@@ -66,19 +58,10 @@ class Generator(nn.Module):
             
     #Generate the current reward        
     def get_reward(self, seq, enc_out):
-        #_, h = self.step(seq, hidden)
-        #with torch.no_grad():
         seq_em = self.embedding(seq)
-        #vec = torch.matmul(seq_em, self.enc2rewd)
-        #vec_bias = torch.matmul(seq_em, self.rewdbias)
-        #reward = torch.matmul(vec, enc_out.permute(1, 2, 0)) + vec_bias
-        #reward = reward + self.rewdbias2.expand(reward.size())
-        #print((enc_out!=enc_out).sum())
         vec = self.enc2rewd(enc_out)
         reward_logit = torch.sum(seq_em.permute(1,0,2) * vec, dim = 2).squeeze()
-        #reward = F.log_softmax(reward, dim=1)
         reward = torch.sigmoid(reward_logit) 
-        #print(reward)
         return reward, reward_logit
     
     #Next item without recommendation
@@ -92,25 +75,14 @@ class Generator(nn.Module):
     def next_click(self, enc_out, rec_list, real_batch):
         embed_weight = self.embedding.embedding.weight.clone().permute(1,0)
         vec = self.enc2out(enc_out)
-        #vec = torch.matmul(embed_weight, self.enc2out)
-        #vec_bias = torch.matmul(embed_weight, self.outbias)
         vec = torch.matmul(vec, embed_weight)
-        #vec = (torch.matmul(vec, enc_out.permute(1,0)) + vec_bias).permute(1,0) 
-        #vec = vec + self.outbias2.expand(vec.size())
         mask = torch.zeros(real_batch, self.n_classes).cuda()
         mask.scatter_(1, rec_list, 1.)
         
-        #output = torch.exp(vec) #+ 1e-12
-        #print(output.size())
         output = F.softmax(vec * mask, dim=1)
-        #output = F.softmax(vec, dim=1)
         outputk = output * mask
         #Normalization
-        #outputk = outputk/(torch.sum(outputk, dim=1, keepdim=True) + 1e-12) + 1e-12
         outputk = F.normalize(outputk, p=1)
-        #output = torch.min(output, torch.ones(output.size()).cuda())
-        #print(outputk)
-        #print((outputk!=outputk).sum())
         return outputk
         
     def value(self, reward_batch):
