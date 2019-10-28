@@ -74,8 +74,6 @@ class ReplayMemory(object):
          
     #Initialized only for the click sampling        
     def init_click_sample(self, seq, batch_reward, batch_action):
-        #self.sample = len(seq[1])
-        #assert self.sample == self.capacity
         assert self.sample == 0
         self.clicks[:, 0] = seq[0][:, 0]
         self.tgt_rewards[:, 0] = batch_reward[:, 0]
@@ -94,15 +92,12 @@ class ReplayMemory(object):
     
     # Action is the recommendation list, hidden is from the environment
     def usr_next_pref(self, click_batch, action, lengths, hidden=None, start=False):
-        #click_batch = Variable(click_batch)
         if start:
             enc_out, hidden = self.user.forward((click_batch, lengths))
         else:
             enc_out, hidden = self.user.step(click_batch, hidden)
         #Action add EOS
-        #print(enc_out[:, -1, :])
         outputk = self.user.next_click(enc_out[:, -1, :], torch.cat((action, self.end * torch.ones(action.size(0), 1).type(torch.LongTensor).cuda()), 1), len(click_batch)) #+ 1e-18
-        #print(outputk)
         return outputk, enc_out, hidden
     
     def usr_reward(self, enc_out, next_clicks):
@@ -117,7 +112,6 @@ class ReplayMemory(object):
             x = usr_outputk.max(1)[1].unsqueeze(1)
         else:
             x = torch.multinomial(usr_outputk, 1)
-            #print(x)
         usr_probs = usr_outputk.gather(1, x.view(-1, 1)).view(-1)
         return x, usr_probs
         
@@ -168,13 +162,10 @@ class ReplayMemory(object):
                 click_current_agent[click_current_agent == self.end] = 0
                 outputk, action, hidden_agent = self.select_action(click_current_agent, None, hidden_agent)
                 usr_outputk, enc_out, hidden_usr = self.usr_next_pref(click_current, action, None, hidden_usr)
-            #print(usr_outputk)
             click_current, usr_probs = self.select_click(usr_outputk)
             #Calculate tgt rewards
             add_tgt_rewards[:, i] = self.usr_reward(enc_out, click_current)
             add_usr_probs[:, i] = usr_probs
-            #print(outputk)
-            #print(outputk.size())
             add_agent_probs[:, i] = outputk.gather(1, click_current.view(-1, 1)).view(-1)
             add_clicks[:, i] = click_current.view(-1)
             add_actions[:, :, i] = action
@@ -207,12 +198,10 @@ class ReplayMemory(object):
             self.gen_rewards[stidx: stidx + batch_size, 1:] = 1.0 #tgt rewards are given in the initialization
         #Simulate other sequences 
         for stidx in range(self.sample, self.capacity, batch_size):
-            #print("Yes!")
             click_batch = self.clicks[stidx: stidx + batch_size].clone().cuda()
             length_batch = self.lengths[stidx: stidx + batch_size]
             tgt_reward_batch = self.tgt_rewards[stidx: stidx + batch_size].clone().cuda()
             action_batch = self.actions[stidx: stidx + batch_size].clone().cuda()
-            #print(self.cpr_sample(click_batch, reward_batch, length_batch)[0].size())
             click_temp, tgt_rewards_temp, actions_temp, usr_probs_temp, agent_probs_temp, self.lengths[stidx: stidx + batch_size] = self.cpr_sample(click_batch, tgt_reward_batch, action_batch, length_batch)
             real_length = int(np.max(self.lengths[stidx: stidx + batch_size]))
             self.clicks[stidx: stidx + batch_size][:, :real_length], self.tgt_rewards[stidx: stidx + batch_size][:, :real_length], self.actions[stidx: stidx + batch_size][:, :, :real_length], self.usr_probs[stidx: stidx + batch_size][:, :real_length], self.agent_probs[stidx: stidx + batch_size][:, :real_length] = click_temp, tgt_rewards_temp, actions_temp, usr_probs_temp, agent_probs_temp
