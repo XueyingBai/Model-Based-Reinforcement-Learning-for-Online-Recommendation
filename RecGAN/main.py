@@ -213,6 +213,7 @@ def pgtrain(optims_gen, optims_dis, generator, agent, discriminator, bsize, embe
             if not os.path.exists(outputdir):
                 os.makedirs(outputdir)
             torch.save(agent.state_dict(), os.path.join(outputdir, 'seqGan_agent3.' + outputmodelname))
+            torch.save(generator.state_dict(), os.path.join(outputdir, 'seqGan_gen3.' + outputmodelname))
             
             inner_val_acc_best = eval_acc
             inner_val_preck_best = eval_preck
