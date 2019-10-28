@@ -19,7 +19,7 @@ def concatenate_tensors(clicks_batch, tgt_rewards_batch, actions_batch, usr_prob
     item_num = len(lengths)
     total_lengths = lengths + add_lengths
     seq_clicks = torch.zeros(item_num, int(np.max(total_lengths))).type(torch.LongTensor).cuda()
-    seq_tgt_rewards = torch.zeros(item_num, int(np.max(total_lengths))).type(torch.LongTensor).cuda()
+    seq_tgt_rewards = torch.zeros(item_num, int(np.max(total_lengths))).type(torch.FloatTensor).cuda()
     seq_actions = torch.zeros(item_num, recom_length, int(np.max(total_lengths))).type(torch.LongTensor).cuda()
     seq_usr_probs = torch.ones(item_num, int(np.max(total_lengths))).cuda()
     seq_agent_probs = torch.ones(item_num, int(np.max(total_lengths))).cuda()
@@ -156,7 +156,7 @@ class ReplayMemory(object):
         add_agent_probs = torch.ones(item_num, local_max_length).cuda()
         add_clicks = torch.zeros(item_num, local_max_length).type(torch.LongTensor).cuda()  
         add_actions = torch.zeros(item_num, self.recom_length, local_max_length).type(torch.LongTensor).cuda()
-        add_tgt_rewards = torch.zeros(item_num, local_max_length).type(torch.LongTensor).cuda()       
+        add_tgt_rewards = torch.zeros(item_num, local_max_length).type(torch.FloatTensor).cuda()       
         for i in range(local_max_length):
             if i == 0:
                 outputk, action, hidden_agent = self.select_action(click_batch, lengths, None, True)
@@ -189,7 +189,6 @@ class ReplayMemory(object):
     def cpr_sample(self, click_batch, tgt_reward_batch, action_batch, lengths):
         usr_probs_batch, agent_probs_batch = self.pr_given(click_batch, action_batch, lengths)
         add_clicks, add_tgt_rewards, add_actions, add_usr_probs, add_agent_probs, add_lengths = self.cpr_add(click_batch, lengths)
-        #print(add_clicks)
         clicks, tgt_rewards, actions, usr_probs, agent_probs, lengths = concatenate_tensors(click_batch, tgt_reward_batch, action_batch, usr_probs_batch, agent_probs_batch, lengths, add_clicks, add_tgt_rewards, add_actions, add_usr_probs, add_agent_probs, add_lengths, self.recom_length)
         #Cut redundant lengths
         lengths = np.minimum(lengths, self.max_length)
@@ -221,7 +220,7 @@ class ReplayMemory(object):
             if rollout == True:
                 dis_reward = self.roll_out(self.clicks[stidx: stidx + batch_size], self.tgt_rewards[stidx: stidx + batch_size], self.actions[stidx: stidx + batch_size], self.lengths[stidx: stidx + batch_size], discriminator) 
                 self.gen_rewards[stidx: stidx + batch_size] = dis_reward.type(torch.FloatTensor).cuda()
-                self.tgt_rewards[stidx: stidx + batch_size] = dis_reward.type(torch.FloatTensor).cuda() * (1+self.tgt_rewards[stidx: stidx + batch_size])
+                self.tgt_rewards[stidx: stidx + batch_size] = self.tgt_rewards[stidx: stidx + batch_size]
         #Clear redundant rewards and probs
         self.gen_rewards = clear_redundant(self.gen_rewards, self.lengths)
         self.tgt_rewards = clear_redundant(self.tgt_rewards, self.lengths)
