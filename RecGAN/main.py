@@ -195,17 +195,15 @@ def pgtrain(optims_gen, optims_dis, generator, agent, discriminator, bsize, embe
         _ = evaluate_user(generator, epoch, bsize, recom_length, validSample, testSample, loss_fn_target, loss_fn_reward, device, eval_type)
         print("Interaction evaluation!")
         _ = evaluate_interaction((generator, agent), epoch, bsize, recom_length, validSample, testSample, loss_fn_target, loss_fn_reward, device, eval_type) 
-        '''
+        ''' 
         if interact:
             print("Real reward evaluation!")
-            reward_orig, reward_optim, _ = Eval()
-        
-        
+            reward_orig, reward_optim = Eval() 
         if epoch == 1:
             evalreward_all.append(reward_orig)
             inner_reward_best = reward_orig
         evalreward_all.append(reward_optim)
-        '''
+        ''' 
         evalacc_all.append(eval_acc)
         evalpreck_all.append(eval_preck)
         if eval_type == 'valid' and epoch <= n_epochs:
@@ -484,18 +482,13 @@ if __name__ == '__main__':
         eval_acc, eval_preck, eval_rewd, eval_loss = evaluate_user(generator, 101, bsize, recom_length-1, validSample, testSample, loss_fn_target, loss_fn_reward, device, 'test')
         #Save the whole policy model
         torch.save(agent, 'model_output/agent.pickle')
-        
+        '''
         if interact: 
         #Generate new samples from the environment
             if e == 0:
-                reward_orig, reward_optim, _ = Eval()
+                reward_orig, reward_optim = Eval()
                 rewards.append(reward_orig)
             rewards.append(inner_reward_best)
-             
-            #reward_orig, reward_optim, _ = Eval()
-            #if e == 0:
-            #    rewards.append(reward_orig)
-            #rewards.append(reward_optim)
               
             #Load the best model
             generator.load_state_dict(torch.load(pretrained_gen))
@@ -503,29 +496,5 @@ if __name__ == '__main__':
             agent.load_state_dict(torch.load(pretrained_agent))
             #Generate new data
             subprocess.call(subprocess_cmd, shell=False)
+        '''
     #save_plot(Epochs, 1, rewards, 'all_rewards.png')
-     
-    '''
-    print('\n--------------------------------------------')
-    print("Generating Samples for Evaluation")
-    print('--------------------------------------------')
-    generator.load_state_dict(torch.load(pretrained_gen))
-    agent.load_state_dict(torch.load(pretrained_agent))
-    discriminator.load_state_dict(torch.load(pretrained_dis))
-
-    #Generate fake sequences
-    #trainindex, validindex, testindex = split_index(1, 0, len(Seqlist)) 
-    trainSample, validSample, testSample=sampleSplit(trainindex, validindex, testindex, Seqlist, numlabel, 'gen')
-    print('Train sample : {0}'.format(trainSample.length()))
-    print('Valid sample : {0}'.format(validSample.length()))
-    print('Test sample : {0}'.format(testSample.length()))
-    if os.path.isfile(write_item):
-        os.remove(write_item)
-    if os.path.isfile(write_target):
-        os.remove(write_target)
-    if os.path.isfile(write_reward):
-        os.remove(write_reward)
-    if os.path.isfile(write_action):
-        os.remove(write_action)
-    _, _, _, _ = gen_fake(generator, agent, testSample, bsize, embed_dim, device, write_item, write_target, write_reward, write_action, numlabel, max_length, recom_length)
-    '''
