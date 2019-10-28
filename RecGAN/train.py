@@ -46,7 +46,6 @@ def train_pred_each(generator, epoch, trainSample, optimizer, batch_size, embed_
             _, action, _ = agent((embed_batch, length))        
             output = generator.next_click(enc_out[:,-1,:], action, len(embed_batch))
         #Get next click
-        #reward = generator.get_reward(output.max(1)[1].view(-1,1), h)
         reward, reward_logit = generator.get_reward(tgt_batch.view(-1,1), enc_out[:,-1,:].unsqueeze(0))
         all_prob_output = output.data.cpu().numpy()
         # reward correctness
@@ -62,19 +61,13 @@ def train_pred_each(generator, epoch, trainSample, optimizer, batch_size, embed_
                 correctk += 1
         # loss
         loss_pred = loss_fn_target(output, tgt_batch)
-        #print(reward)
         #weight_loss = (reward_batch + 1) #** 5.3
         weight_loss = torch.FloatTensor(k).fill_(1).cuda() 
         loss_fn_reward = nn.BCEWithLogitsLoss(weight_loss)
         loss_fn_target.size_average = True
         loss_reward = loss_fn_reward(reward_logit, reward_batch)
-        #loss_reward = torch.sum((reward - reward_batch)**2 * torch.pow(reward+1, 5.3))/k
         if not only_rewards:
             loss = loss_pred + loss_reward
-            #print(loss)
-            #loss = loss_pred
-            #print(tgt_batch)
-            #print(output)
         else:
             loss = loss_reward
             #Unable updates of the rnn model
@@ -89,12 +82,8 @@ def train_pred_each(generator, epoch, trainSample, optimizer, batch_size, embed_
         #Gradient clipping
         clip_grad_norm_(filter(lambda p: p.requires_grad, generator.parameters()), 5)
         #clip_grad_value_(filter(lambda p: p.requires_grad, generator.parameters()), 1)
-        #index = np.where((enc_out != enc_out).data.cpu().numpy() == 1)[0]
-            #print(seq_em[index])
-        #clip_grad_norm_(filter(lambda p: p.requires_grad, generator.parameters()), 5)
         # optimizer step
         optimizer.step()
-        #optimizer.param_groups[0]['lr'] = current_lr
     train_acc = np.round(100 * correct/trainSample.length(), 2)
     #train_map=np.round(100 * mapeach/trainSample.length(), 2)
     train_preck=np.round(100 * correctk/trainSample.length(), 2)
@@ -126,7 +115,6 @@ def train_dis_each(discriminator, epoch, trainSample, optimizer, batch_size, emb
         embed_batch,tgt_batch, reward_batch, action_batch = Variable(embed_batch.to(device)), Variable(tgt_batch.to(device)), Variable(reward_batch.to(device)), Variable(action_batch.to(device))
         k = embed_batch.size(0) #Actual batch size
         # model forward
-        #output = discriminator((embed_batch, length), reward_batch)
         output = discriminator((embed_batch, length), reward_batch, action_batch)
         
         all_prob = output.data.cpu().numpy()
@@ -189,9 +177,6 @@ def train_gen_pg_each(generator, agent, discriminator, epoch, trainSample, subnu
         tgt_reward = torch.round(tgt_reward)
         if not pretrain: 
             loss_usr = -((torch.log(usr_prob + 1e-12) + torch.log(tgt_prob + 1e-12)) * gen_reward).sum()/k
-        #else:
-            #loss_agent = -(torch.log(agent_prob) * (gen_reward + 3*tgt_reward)).sum()#/k + 1e-18
-            #print(loss_agent)
         #Calculate the cumulative reward
         tgt_reward = gen_reward * (1 + tgt_reward)
         tgt_value = generator.value(tgt_reward)
@@ -223,7 +208,6 @@ def train_gen_pg_each(generator, agent, discriminator, epoch, trainSample, subnu
         #clip_grad_norm_(filter(lambda p: p.requires_grad, agent.parameters()), 5)
         # optimizer step
         optimizer_agent.step()
-        #optimizer.param_groups[0]['lr'] = current_lr
         # Printing
         if len(all_costs) == 100:
             logs.append( '{0} ; loss {1} ; seq/s {2}'.format(stidx, round(np.mean(all_costs),2), int(len(all_costs) * batch_size / (time.time() - last_time))))
