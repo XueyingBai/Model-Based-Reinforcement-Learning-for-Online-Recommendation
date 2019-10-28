@@ -63,11 +63,10 @@ def train_pred_each(generator, epoch, trainSample, optimizer, batch_size, embed_
         # loss
         loss_pred = loss_fn_target(output, tgt_batch)
         #print(reward)
-        '''
-        weight_loss = (reward_batch + 1) ** 2
+        #weight_loss = (reward_batch + 1) #** 5.3
+        weight_loss = torch.FloatTensor(k).fill_(1).cuda() 
         loss_fn_reward = nn.BCEWithLogitsLoss(weight_loss)
         loss_fn_target.size_average = True
-        '''
         loss_reward = loss_fn_reward(reward_logit, reward_batch)
         #loss_reward = torch.sum((reward - reward_batch)**2 * torch.pow(reward+1, 5.3))/k
         if not only_rewards:
@@ -185,13 +184,16 @@ def train_gen_pg_each(generator, agent, discriminator, epoch, trainSample, subnu
         replay.init_click((embed_batch, length), reward_batch, action_batch)
         replay.gen_sample(batch_size, True, discriminator)
         tgt_reward, gen_reward, usr_prob, agent_prob = replay.tgt_rewards.type(torch.FloatTensor).to(device), replay.gen_rewards.type(torch.FloatTensor).to(device), replay.usr_probs.to(device), replay.agent_probs.to(device)
+         
+        tgt_prob = torch.abs(1.0-torch.round(tgt_reward)-tgt_reward)
         tgt_reward = torch.round(tgt_reward)
         if not pretrain: 
-            loss_usr = -((torch.log(usr_prob + 1e-12) + torch.log(tgt_reward + 1e-12)) * gen_reward).sum()/k
+            loss_usr = -((torch.log(usr_prob + 1e-12) + torch.log(tgt_prob + 1e-12)) * gen_reward).sum()/k
         #else:
             #loss_agent = -(torch.log(agent_prob) * (gen_reward + 3*tgt_reward)).sum()#/k + 1e-18
             #print(loss_agent)
         #Calculate the cumulative reward
+        tgt_reward = gen_reward * (1 + tgt_reward)
         tgt_value = generator.value(tgt_reward)
         #loss_agent = -(torch.log(agent_prob + 1e-12) * (gen_reward + tgt_value)).sum()/k #+ 1e-18
         loss_agent = -(torch.log(agent_prob + 1e-12) * (tgt_value)).sum()/k #+ 1e-18
