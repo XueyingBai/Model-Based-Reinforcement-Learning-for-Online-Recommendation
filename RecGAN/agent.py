@@ -46,14 +46,8 @@ class Agent(nn.Module):
             enc_out, (h, c) = self.encoder((seq_em, seq_len))
         else:
             enc_out, h = self.encoder((seq_em, seq_len))
-        #print(h)
         output = self.enc2out(enc_out[:, -1, :])#batch*hidden
-        #print(output)
         output = F.softmax(output, dim=1)
-        #output = torch.exp(output)
-        #output = F.log_softmax(output, dim=1)
-        # Extract the last hidden layer
-        #output = torch.exp(self.enc2out(h.squeeze(0))) #batch*hidden
         #indices is with size of batch_size*self.recom
         if evaluate:
             _, indices = torch.topk(output, self.recom, dim = 1, sorted = True)
@@ -70,23 +64,15 @@ class Agent(nn.Module):
             enc_out, (h, c) = self.encoder.step_cell(seq_em, hidden)
         else:
             enc_out, h = self.encoder.step_cell(seq_em, hidden)
-        #output = torch.exp(self.enc2out(h.squeeze(0))) #batch*hidden
         output = self.enc2out(enc_out[:, -1, :]) #batch*hidden
-        #indices is with size of batch_size*self.recom
         output = F.softmax(output, dim=1)
-        #print((output!=output).sum())
-        #output = F.softmax(self.enc2out(enc_out[:, -1, :]), dim=1)
-        #output = torch.exp(output)
         if not evaluate:
             indices = torch.multinomial(output, self.recom)
         else:
             _, indices = torch.topk(output, self.recom, dim = 1, sorted = True)
-        # Return after sorting
-        
         # Only select from the top k
         if self.model == 'LSTM':
             return output, indices, (h, c)
-            #return output, (h, c)
         else:
             return output, indices, h
         
