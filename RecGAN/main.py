@@ -26,7 +26,7 @@ def adj_optim(optims, optimizer, minlr, lrshrink, stop_training, times_no_improv
             stop_training = True
     if 'adam' in optims:
         # early stopping (at 2nd decrease in accuracy)
-        if times_no_improvement >= 5:
+        if times_no_improvement >= 2:
             stop_training = True
     return stop_training
 
@@ -218,6 +218,7 @@ def pgtrain(optims_gen, optims_dis, generator, agent, discriminator, bsize, embe
             inner_val_preck_best = eval_preck
              
         if not pretrain:
+            '''
             #Adjust the reward prediction
             print('Reward Adjust')
             trainSample_rewd, validSample_rewd, testSample_rewd=sampleSplit(trainindex, validindex, testindex, Seqlist, numlabel, recom_length)
@@ -226,6 +227,7 @@ def pgtrain(optims_gen, optims_dis, generator, agent, discriminator, bsize, embe
             for name, param in generator.named_parameters():
                 if 'embedding' in name or 'encoder' or 'enc2out' in name:
                     param.requires_grad = True
+            '''
             print('\nD-step')        
             #Discriminator trainging
             for i in range(d_step):
@@ -336,7 +338,7 @@ if __name__ == '__main__':
         
         #Generate the training, validating and testing sequence ids
         global trainindex, validindex, testindex
-        trainindex, validindex, testindex = split_index(0.95, 0.025, len(Seqlist))  
+        trainindex, validindex, testindex = split_index(0.8, 0.1, len(Seqlist))  
         print('Train seq : {0}'.format(len(trainindex)))
         print('Valid seq : {0}'.format(len(validindex)))
         print('Test seq : {0}'.format(len(testindex)))
@@ -400,7 +402,7 @@ if __name__ == '__main__':
             val_acc_best, val_preck_best, val_rewd_best, val_loss_best = evaluate_user(generator, e, bsize, recom_length, validSample, testSample, loss_fn_target, loss_fn_reward, device, "valid")
         else:
             val_acc_best, val_preck_best, val_rewd_best, val_loss_best = None, None, None, None
-         
+          
         print('\n--------------------------------------------')
         print("Pretrain Generator with given recommendation")
         print('--------------------------------------------')
@@ -427,7 +429,6 @@ if __name__ == '__main__':
         agent.load_state_dict(torch.load(pretrained_agent)) 
         print("Agent evaluation!")   
         eval_acc, eval_preck = evaluate_agent(agent, 101, bsize, recom_length-1, validSample, testSample, device, 'test')
-          
         
         #Generate fake sequences, only use the training data
         generator.load_state_dict(torch.load(pretrained_gen))
