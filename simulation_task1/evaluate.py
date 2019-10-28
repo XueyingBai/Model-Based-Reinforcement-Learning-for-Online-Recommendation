@@ -30,9 +30,9 @@ def GetStartAction(filename):
     return action
          
 def Eval():
-    #filename1='/home/xb6cf/RL_Recommend/seqGan/gen_reward2.txt'
-    filename2='/home/xb6cf/RL_Recommend/seqGan/reward_gen.txt' 
-    filename1='/home/xb6cf/RL_Recommend/simulation_task1/gen_reward.txt'
+    #filename1='/home/seqGan/gen_reward2.txt'
+    filename2='/home/seqGan/reward_gen.txt' 
+    filename1='/home/simulation_task1/gen_reward.txt'
     _, mean_orig = GetFileReward(filename1)
     _, mean_pred = GetFileReward(filename2)
     
@@ -40,10 +40,10 @@ def Eval():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     
     #The environment
-    environment = "/home/xb6cf/RL_Recommend/simulation_task1/model_output/environment.model.pth"
-    #policy_new = "/home/xb6cf/RL_Recommend/seqGan/model_output/seqGan_agent.model.pth"
-    policy_new = "/home/xb6cf/RL_Recommend/simulation_task1/model_output/model_free_simple.policy.pth"
-    #policy_new = "/home/xb6cf/RL_Recommend/simulation_task1/model_output/orig_policy.model.pth"
+    environment = "/home/simulation_task1/model_output/environment.model.pth"
+    #policy_new = "/home/seqGan/model_output/seqGan_agent.model.pth"
+    policy_new = "/home/simulation_task1/model_output/model_free_simple.policy.pth"
+    #policy_new = "/home/simulation_task1/model_output/orig_policy.model.pth"
     num_clicks=100
     recom_length=20
     args = get_args()
@@ -65,7 +65,7 @@ def Eval():
     #print(policy)
     policy.load_state_dict(torch.load(policy_new))
      
-    #policy = torch.load("/home/xb6cf/RL_Recommend/simulation_task1/model_output/orig_policy.model.pickle")
+    #policy = torch.load("/home/simulation_task1/model_output/orig_policy.model.pickle")
     #Generate the start states
     capacity = 10000
     max_length = 5
