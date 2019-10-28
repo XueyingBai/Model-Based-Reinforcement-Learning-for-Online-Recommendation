@@ -36,8 +36,8 @@ if __name__ == '__main__':
     env = Environment(bsize, embed_dim, encod_dim, num_clicks).to(device)
     policy = Policy(bsize, embed_dim_policy, encod_dim_policy, num_clicks-1, recom_number).to(device)
     if load:
-        environment = "/home/xb6cf/RL_Recommend/simulation_task1/model_output/environment.model.pth"
-        policy_new = "/home/xb6cf/RL_Recommend/seqGan/model_output/seqGan_agent.model.pth"
+        environment = "/home/simulation_task1/model_output/environment.model.pth"
+        policy_new = "/home/RecGAN/model_output/seqGan_agent.model.pth"
         env.load_state_dict(torch.load(environment))
         policy.load_state_dict(torch.load(policy_new))
     else:
