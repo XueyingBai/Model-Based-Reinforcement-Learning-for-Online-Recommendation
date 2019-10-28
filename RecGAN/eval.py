@@ -30,7 +30,6 @@ def evaluate_interaction(model, epoch, batch_size, recom_length, validSample, te
         enc_out, h = generator((embed_batch, length))
         _, action, _ = agent((embed_batch, length), True)        
         output = generator.next_click(enc_out[:,-1,:], action, len(embed_batch))
-        #reward = generator.get_reward(output.max(1)[1].view(-1,1), h)
         reward, reward_logit = generator.get_reward(tgt_batch.view(-1,1), enc_out[:,-1,:].unsqueeze(0))
         pred_reward = torch.round(reward.data)
         correct_reward += pred_reward.long().eq(reward_batch.data.long()).cpu().sum().numpy()  
@@ -136,13 +135,10 @@ def evaluate_user(generator, epoch, batch_size, recom_length, validSample, testS
             output = generator.next_click(enc_out[:,-1,:], action_batch, len(embed_batch))
         else:
             output = generator.next_simple(enc_out[:,-1,:])
-        #print(output.data.long())  
         output_click = output.data.max(1)[1]
-        #print(torch.sum(output!=output))
         correct += output_click.data.long().eq(tgt_batch.data.long()).cpu().numpy().sum()
         all_prob_output = output.data.cpu().numpy()
         
-        #reward = generator.get_reward(output_click.view(-1,1), h)
         reward, reward_logit = generator.get_reward(tgt_batch.view(-1,1), enc_out[:,-1,:].unsqueeze(0))
         pred_reward = torch.round(reward)
         correct_reward += pred_reward.long().eq(reward_batch.data.long()).cpu().sum().numpy()  
@@ -186,7 +182,6 @@ def evaluate_discriminator(discriminator, epoch, batch_size, recom_length, valid
         embed_batch,tgt_batch, reward_batch, action_batch = Variable(embed_batch.cuda()), Variable(tgt_batch.cuda()), Variable(reward_batch.cuda()), Variable(action_batch.cuda())
         k = embed_batch.size(0) 
          
-        #output = discriminator((embed_batch, length), reward_batch) 
         output = discriminator((embed_batch, length), reward_batch, action_batch)       
         pred = output.data.max(1)[1]
         correct += pred.long().eq(tgt_batch.data.long()).cpu().numpy().sum()
