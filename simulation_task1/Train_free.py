@@ -58,7 +58,7 @@ if __name__ == '__main__':
     outputmodelname="model.pth"
     #Define the environment
     num_clicks=100
-    recom_number = 10
+    recom_number = 20
     args = get_args()
     bsize=args.batch_size
     embed_dim=args.embed_dim
