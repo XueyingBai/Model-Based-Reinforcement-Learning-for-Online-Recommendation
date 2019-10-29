@@ -5,6 +5,8 @@ import torch.optim as optim
 import torch
 from replay_simu import ReplayMemory
 import os
+import sys
+sys.path.append('../RecGAN')
 from util import get_args, get_optimizer
 '''
 import pickle
@@ -16,7 +18,6 @@ if __name__ == '__main__':
     global device
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     outputdir="model_output"
-    outputmodelname="model.pth"
     #Define the environment
     num_clicks=100
     recom_number = 20
@@ -32,20 +33,22 @@ if __name__ == '__main__':
     optim = args.optim
     load = args.load 
     
+    #print(torch.load("/home/xb6cf/RL_Recommend/seqGan/model_output/agent.pickle"))
     #Set environment
-    env = Environment(bsize, embed_dim, encod_dim, num_clicks).to(device)
-    policy = Policy(bsize, embed_dim_policy, encod_dim_policy, num_clicks-1, recom_number).to(device)
     if load:
-        environment = "/home/simulation_task1/model_output/environment.model.pth"
-        policy_new = "/home/RecGAN/model_output/seqGan_agent.model.pth"
-        env.load_state_dict(torch.load(environment))
-        policy.load_state_dict(torch.load(policy_new))
+        #Absolute route
+        environment = "/home/simulation_task1/model_output/environment.pickle"
+        policy_new = "/home/RecGAN/model_output/agent.pickle"
+        env = torch.load(environment)
+        policy = torch.load(policy_new)
     else:
+        env = Environment(bsize, embed_dim, encod_dim, num_clicks).to(device)
+        policy = Policy(bsize, embed_dim_policy, encod_dim_policy, num_clicks-1, recom_number).to(device)
         env.init_params()
-        torch.save(env.state_dict(), os.path.join(outputdir, 'environment.' + outputmodelname))
+        torch.save(env, os.path.join(outputdir, 'environment.pickle'))
         #Set initial policy
         policy.init_params()
-        torch.save(policy.state_dict(), os.path.join(outputdir, 'orig_policy.' + outputmodelname))
+        torch.save(policy, os.path.join(outputdir, 'orig_policy.pickle'))
      
     #Generate action and reward sequences
     capacity = 10000
@@ -53,6 +56,7 @@ if __name__ == '__main__':
     file_action = 'gen_click.txt'
     file_reward = 'gen_reward.txt'
     file_recom = 'gen_action.txt'
+    #for i in range(5):
     if os.path.isfile(file_action):
         os.remove(file_action)
     if os.path.isfile(file_reward):
@@ -64,5 +68,5 @@ if __name__ == '__main__':
     Replay.write_sample(file_action, file_reward, file_recom, num_clicks, add_end=False)  
     orig_reward = Replay.rewards.data.cpu().float().sum(1).mean().numpy()
     print('The original reward is: ' + str(orig_reward))
-        
+
     
