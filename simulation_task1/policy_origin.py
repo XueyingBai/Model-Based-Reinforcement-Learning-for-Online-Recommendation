@@ -4,7 +4,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
 import torch.nn.init as init    
-from nn_layer import EmbeddingLayer, Encoder
+from nn_layer_simu import EmbeddingLayer, Encoder
     
 class Policy(nn.Module):
     def __init__(self, bsize, embed_dim, encod_dim, numlabel, recom_number=50, feature_vec=None, init=False, model='LSTM'):
