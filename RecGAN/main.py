@@ -164,7 +164,6 @@ def pgtrain(optims_gen, optims_dis, generator, agent, discriminator, bsize, embe
     d_step = 1
     evalacc_all = [val_acc_best]
     evalpreck_all = [val_preck_best]
-    evalreward_all = []
     #Define the optimizer
     optim_fn_gen, optim_params_gen=get_optimizer(optims_gen)
     optim_fn_dis, optim_params_dis=get_optimizer(optims_dis)
@@ -195,15 +194,7 @@ def pgtrain(optims_gen, optims_dis, generator, agent, discriminator, bsize, embe
         _ = evaluate_user(generator, epoch, bsize, recom_length, validSample, testSample, loss_fn_target, loss_fn_reward, device, eval_type)
         print("Interaction evaluation!")
         _ = evaluate_interaction((generator, agent), epoch, bsize, recom_length, validSample, testSample, loss_fn_target, loss_fn_reward, device, eval_type) 
-        ''' 
-        if interact:
-            print("Real reward evaluation!")
-            reward_orig, reward_optim = Eval() 
-        if epoch == 1:
-            evalreward_all.append(reward_orig)
-            inner_reward_best = reward_orig
-        evalreward_all.append(reward_optim)
-        ''' 
+        
         evalacc_all.append(eval_acc)
         evalpreck_all.append(eval_preck)
         if eval_type == 'valid' and epoch <= n_epochs:
@@ -243,10 +234,9 @@ def pgtrain(optims_gen, optims_dis, generator, agent, discriminator, bsize, embe
         epoch += 1
         
     if plot_fig == True:
-        #save_plot(n_epochs, 1, evalreward_all, 'pg_reward5.png')
         save_plot(n_epochs, 1, evalacc_all, 'pg_accuracy6.png')
         save_plot(n_epochs, 1, evalpreck_all, 'pg_map6.png')
-    return inner_val_acc_best, inner_val_preck_best, None#inner_reward_best
+    return inner_val_acc_best, inner_val_preck_best
         
 if __name__ == '__main__':
     ''' 
@@ -295,9 +285,9 @@ if __name__ == '__main__':
     subprocess_cmd = subprocess_cmd.split()
     
     rewards = []
-    Epochs = 1
+    Epochs = 3
     global interact
-    interact = False #+1 for the end symbol
+    interact = True
     '''
     val_acc_best = None 
     val_map_best = None
@@ -319,12 +309,6 @@ if __name__ == '__main__':
 
         #Load Sequence Data
         Seqlist, itemlist=ReadSeq(args.click, args.reward, args.action)
-        '''
-        if not pad:
-            numlabel = len(itemlist) + 1 #add end
-        else:
-            numlabel = len(itemlist) + 2 #add end and pad
-        '''
         numlabel = len(itemlist) + 1 #add end
         print(numlabel)
         #print("The real time of items appear:")
@@ -396,12 +380,8 @@ if __name__ == '__main__':
         trainSample, validSample, testSample=sampleSplit(trainindex, validindex, testindex, Seqlist, numlabel, recom_length-1)#, warm_up = 0)
         
         #Pretrain generator only
-        if e > 0:
-            print("Current user model best:")
-            val_acc_best, val_preck_best, val_rewd_best, val_loss_best = evaluate_user(generator, e, bsize, recom_length, validSample, testSample, loss_fn_target, loss_fn_reward, device, "valid")
-        else:
-            val_acc_best, val_preck_best, val_rewd_best, val_loss_best = None, None, None, None
-          
+        val_acc_best, val_preck_best, val_rewd_best, val_loss_best = None, None, None, None
+         
         print('\n--------------------------------------------')
         print("Pretrain Generator with given recommendation")
         print('--------------------------------------------')
@@ -421,7 +401,7 @@ if __name__ == '__main__':
         generator.load_state_dict(torch.load(pretrained_gen))
         trainSample, validSample, testSample=sampleSplit(trainindex, validindex, testindex, Seqlist, numlabel, recom_length-1, 'adv')
          
-        _, _, _ = pgtrain(optims_adv, optims_nll, generator, agent, discriminator, bsize, embed_dim, trainSample, validSample, testSample, None, None, None, numlabel, max_length, recom_length-1, gen_ratio = 1, n_epochs = 20, plot_fig = False, pretrain = True)
+        _ = pgtrain(optims_adv, optims_nll, generator, agent, discriminator, bsize, embed_dim, trainSample, validSample, testSample, None, None, None, numlabel, max_length, recom_length-1, gen_ratio = 1, n_epochs = 20, plot_fig = False, pretrain = True)
           
         #Test pretrained agent model 
         print("Testing")
@@ -439,7 +419,7 @@ if __name__ == '__main__':
         shutil.copy('tar_gen_real.txt', write_target)
         shutil.copy('reward_gen_real.txt', write_reward)
         shutil.copy('action_gen_real.txt', write_action)
-        _, _, _, _ = gen_fake(generator, agent, trainSample, bsize, embed_dim, device, write_item, write_target, write_reward, write_action, numlabel, max_length, recom_length-1) #No EOS
+        _ = gen_fake(generator, agent, trainSample, bsize, embed_dim, device, write_item, write_target, write_reward, write_action, numlabel, max_length, recom_length-1) #No EOS
          
         #Pretrain discriminator
         print('\n--------------------------------------------')
@@ -469,7 +449,7 @@ if __name__ == '__main__':
         trainSample, validSample, testSample=sampleSplit(trainindex, validindex, testindex, Seqlist, numlabel, recom_length-1, 'adv')#No eos
          
         _ = evaluate_agent(agent, 101, bsize, recom_length-1, validSample, testSample, device, 'test') 
-        _, _, _ = pgtrain(optims_adv, optims_nll, generator, agent, discriminator, bsize, embed_dim, trainSample, validSample, testSample, eval_acc, eval_preck, None, numlabel, max_length, recom_length-1, n_epochs = 10)
+        _ = pgtrain(optims_adv, optims_nll, generator, agent, discriminator, bsize, embed_dim, trainSample, validSample, testSample, eval_acc, eval_preck, None, numlabel, max_length, recom_length-1, n_epochs = 10)
          
         print("Testing")
         agent.load_state_dict(torch.load(pretrained_agent)) 
@@ -482,19 +462,19 @@ if __name__ == '__main__':
         eval_acc, eval_preck, eval_rewd, eval_loss = evaluate_user(generator, 101, bsize, recom_length-1, validSample, testSample, loss_fn_target, loss_fn_reward, device, 'test')
         #Save the whole policy model
         torch.save(agent, 'model_output/agent.pickle')
-        '''
+         
         if interact: 
         #Generate new samples from the environment
+            reward_orig, reward_optim = Eval('model_output/agent.pickle')
             if e == 0:
-                reward_orig, reward_optim = Eval()
                 rewards.append(reward_orig)
-            rewards.append(inner_reward_best)
-              
+            rewards.append(reward_optim)
+            '''  
             #Load the best model
             generator.load_state_dict(torch.load(pretrained_gen))
             discriminator.load_state_dict(torch.load(pretrained_dis))
             agent.load_state_dict(torch.load(pretrained_agent))
+            '''
             #Generate new data
             subprocess.call(subprocess_cmd, shell=False)
-        '''
-    #save_plot(Epochs, 1, rewards, 'all_rewards.png')
+    save_plot(Epochs, 1, rewards, 'all_rewards.png')
