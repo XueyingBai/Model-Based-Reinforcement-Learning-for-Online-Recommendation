@@ -15,11 +15,8 @@ class ReplayMemory(object):
         self.max_length = max_length  
         self.action_num = action_num
         self.recom_num = recom_length
-        #self.clicks= np.zeros((self.capacity, max_length), dtype=int)
         self.clicks = torch.zeros(self.capacity, max_length).type(torch.LongTensor).cuda()
         self.probs = torch.ones(self.capacity, max_length).type(torch.FloatTensor).cuda()
-        #self.probs.requires_grad = True
-        #self.rewards = np.zeros((self.capacity, max_length))
         self.rewards = torch.zeros(self.capacity, max_length).type(torch.FloatTensor).cuda()
         self.actions = torch.zeros(self.capacity, self.recom_num, max_length).type(torch.LongTensor).cuda()
         self.length = np.ones(self.capacity, dtype=int)*max_length
@@ -98,31 +95,6 @@ class ReplayMemory(object):
                 l = self.length[stidx + k]
                 self.rewards[stidx + k, l:] = 0
                 self.probs[stidx+k, l:] = 1
-    '''       
-    def gen_sample_test(self, batch_size):
-        for stidx in range(0, self.capacity, batch_size):
-            #Start clicks
-            click_batch = self.clicks[stidx: stidx + batch_size]
-            click_batch = torch.from_numpy(click_batch).cuda()
-            action = self.select_action_testagent((click_batch, np.ones(len(click_batch), dtype=int)))
-            click_batch, hidden_env, reward = self.next_click(click_batch, action, None, True)
-            index = np.where(nextclick == self.env.end)[0]
-            self.length[stidx + index] = 1
-            for i in range(self.max_length-1):
-                self.clicks[stidx: stidx + batch_size, i+1] = click_batch.squeeze(1).data.cpu().numpy()
-                self.rewards[stidx: stidx + batch_size, i] = reward.data.cpu().numpy()
-                # Agent
-                clicklist_batch = torch.from_numpy(self.clicks).cuda()
-                action = self.select_action_testagent((clicklist_batch, (i+2)*np.ones(len(clicklist_batch), dtype=int)))
-                # Environment
-                click_batch, hidden_env, reward = self.next_click(click_batch, action, hidden_env)
-                #Not adding for the ended states
-                index = np.where(click_batch.data.cpu().numpy() == self.env.end)[0]
-                for j in index:
-                    if self.length[stidx + j] == self.max_length: # The length hasn't been assigned
-                        self.length[stidx + j] = i + 2
-            self.rewards[stidx: stidx + batch_size, self.max_length-1] = reward.data.cpu().numpy() 
-    '''
                 
     def write_action_line(self, file_action, action_tensor, sep = ' '):
         action = action_tensor.data.cpu().numpy()
