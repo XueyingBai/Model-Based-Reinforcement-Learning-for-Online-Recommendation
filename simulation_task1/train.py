@@ -37,7 +37,7 @@ def train_gen_pg_each(policy, env, epoch, optimizer, num_clicks, recom_number, m
         batch_replay.gen_sample(real_size)
         click_batch, reward_batch, action_batch, prob_batch = Variable(batch_replay.clicks), Variable(batch_replay.rewards), Variable(batch_replay.actions), Variable(batch_replay.probs, requires_grad = True) 
         value_batch = env.value(reward_batch)
-        loss = -(torch.log(prob_batch) * (1 + value_batch)).sum()
+        loss = -(torch.log(prob_batch) * (value_batch)).sum()
         all_costs.append(loss.data.cpu().numpy())
         # backward
         optimizer.zero_grad()
