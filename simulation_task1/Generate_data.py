@@ -53,9 +53,10 @@ if __name__ == '__main__':
     #Generate action and reward sequences
     capacity = 10000
     max_length = 5
-    file_action = 'gen_click.txt'
-    file_reward = 'gen_reward.txt'
-    file_recom = 'gen_action.txt'
+    #Absolute route
+    file_action = '/home/simulation_task1/gen_click.txt'
+    file_reward = '/home/simulation_task1/gen_reward.txt'
+    file_recom = '/home/simulation_task1/gen_action.txt'
     #for i in range(5):
     if os.path.isfile(file_action):
         os.remove(file_action)
@@ -67,6 +68,6 @@ if __name__ == '__main__':
     Replay.gen_sample(bsize)
     Replay.write_sample(file_action, file_reward, file_recom, num_clicks, add_end=False)  
     orig_reward = Replay.rewards.data.cpu().float().sum(1).mean().numpy()
-    print('The original reward is: ' + str(orig_reward))
+    print('\nThe original reward is: ' + str(orig_reward))
 
     
