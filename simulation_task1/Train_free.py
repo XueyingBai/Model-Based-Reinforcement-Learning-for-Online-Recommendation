@@ -21,9 +21,9 @@ def save_plot(epoch_num, step, rewards, filepath):
     fig.savefig(filepath)
     plt.close(fig)  # close the figure     
     
-def train(optims, max_epoch, policy, env, num_clicks, recom_number, max_length, origin_reward, capacity):
+def train(optims, max_epoch, policy, bsize, env, num_clicks, recom_number, max_length, origin_reward, capacity):
     outputdir="model_output"
-    outputmodelname="policy.pth" 
+    policy_new=os.path.join(outputdir, 'model_free_simple.pickle') 
     
     #weight = torch.FloatTensor(numlabel).fill_(1)
     optim_fn, optim_params=get_optimizer(optims)
@@ -35,15 +35,14 @@ def train(optims, max_epoch, policy, env, num_clicks, recom_number, max_length, 
     best_model = None
     rewards = [origin_reward]
     while epoch <= n_epochs:
-        _ = train_gen_pg_each(policy, env, epoch, optimizer, num_clicks, recom_number, max_length, total_size = capacity)
+        _ = train_gen_pg_each(policy, env, epoch, optimizer, num_clicks, recom_number, max_length, bsize, total_size = capacity)
         print('saving policy at epoch {0}'.format(epoch))
         if not os.path.exists(outputdir):
             os.makedirs(outputdir)
-        torch.save(policy.state_dict(), os.path.join(outputdir, 'model_free_simple.' + outputmodelname))
+        torch.save(policy, policy_new)
         #Eval the new policy
-        _, mean_reward = Eval()
+        _, mean_reward = Eval(policy_new)
         rewards.append(mean_reward)
-        print("The mean reward is: " + str(mean_reward))
         # save model        
         if mean_reward >= max_reward:
             best_model = policy
@@ -55,37 +54,27 @@ if __name__ == '__main__':
     global device
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     outputdir="model_output"
-    outputmodelname="model.pth"
+    policy_new=os.path.join(outputdir, 'model_free_simple.pickle') 
     #Define the environment
     num_clicks=100
     recom_number = 20
     args = get_args()
-    bsize=args.batch_size
-    embed_dim=args.embed_dim
-    encod_dim=args.nhid
-    init_embed=args.init_embed
-    model_type=args.model
-    embed_dim_policy = args.embed_dim_policy
-    encod_dim_policy=args.nhid_policy
-    seedkey=args.seed
     optim = args.optim
+    bsize = args.batch_size
     #Load environment
-    environment = "./model_output/environment.model.pth"
-    env = Environment(bsize, embed_dim, encod_dim, num_clicks).to(device)
-    env.load_state_dict(torch.load(environment))
+    env_path = "./model_output/environment.pickle"
+    env = torch.load(env_path)
     #Load initial policy
-    policy_new = "./model_output/orig_policy.model.pth"
-    policy = Policy(bsize, embed_dim_policy, encod_dim_policy, num_clicks-1, recom_number).to(device)
-    #print(policy)
-    policy.load_state_dict(torch.load(policy_new))
-    torch.save(policy.state_dict(), 'model_free_simple.policy.pth')
+    policy_path = "./model_output/orig_policy.pickle"
+    policy = torch.load(policy_path)
+    torch.save(policy, policy_new)
     
     #Training for model-free reinforcement learning
     max_epoch = 200
     max_length = 5
     capacity = 10000
-    origin_reward, _ = Eval()
-    _, rewards, max_reward = train(optim, max_epoch, policy, env, num_clicks, recom_number, max_length, origin_reward, capacity)        
+    origin_reward, _ = Eval(policy_new)
+    _, rewards, max_reward = train(optim, max_epoch, policy, bsize, env, num_clicks, recom_number, max_length, origin_reward, capacity)        
     #Plot rewards
     save_plot(max_epoch, 1, rewards, 'rewards_test.png')
     #Write rewards
