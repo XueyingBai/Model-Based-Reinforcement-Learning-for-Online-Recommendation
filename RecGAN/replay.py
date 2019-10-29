@@ -136,7 +136,7 @@ class ReplayMemory(object):
                 click_current_agent[click_current_agent == self.end] = 0
                 outputk, action, hidden_agent = self.select_action(click_current_agent, None, hidden_agent) 
                 usr_outputk, enc_out, hidden_usr = self.usr_next_pref(click_current, action_next, None, hidden_usr)     
-            #(a_t, c_{t+1}, r_t)
+            #(a_t, c_t, r_t)
             agent_prob[:, i+1] = outputk.gather(1, click_batch[:, i+1].view(-1, 1)).view(-1) #+ 1e-10 
             usr_prob[:, i+1] = usr_outputk.gather(1, click_batch[:, i+1].view(-1, 1)).view(-1) #+ 1e-18 
         return usr_prob, agent_prob 
