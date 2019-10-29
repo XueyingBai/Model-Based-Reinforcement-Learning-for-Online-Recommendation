@@ -101,8 +101,8 @@ class ReplayMemory(object):
         return outputk, enc_out, hidden
     
     def usr_reward(self, enc_out, next_clicks):
-        with torch.no_grad():
-            reward, _ = self.user.get_reward(next_clicks, enc_out[:,-1,:].unsqueeze(0))
+        #with torch.no_grad():
+        reward, _ = self.user.get_reward(next_clicks, enc_out[:,-1,:].unsqueeze(0))
             #reward = reward.max(1)[1]
             #reward = torch.round(reward)
         return reward
