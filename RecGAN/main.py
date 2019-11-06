@@ -227,7 +227,7 @@ def pgtrain(optims_gen, optims_dis, generator, agent, discriminator, bsize, embe
                 shutil.copy('action_gen_real.txt', write_action)
                 _, _, _, _ = gen_fake(generator, agent, trainSample, bsize, embed_dim, device, write_item, write_target, write_reward, write_action, action_num, max_length, recom_length)
                 clicklist, _ = ReadSeq(write_item, write_reward, write_action, write_target)
-                trainindex_dis, validindex_dis, testindex_dis = split_index(0.7, 0.1, len(clicklist))
+                trainindex_dis, validindex_dis, testindex_dis = split_index(0.7, 0.1, len(clicklist), True) #Shuffle the index
                 trainSample_dis, validSample_dis, testSample_dis=sampleSplit(trainindex_dis, validindex_dis, testindex_dis, clicklist, 2, recom_length, 'dis')
 
                 discriminator, _, _ = train_dis(optims_dis, discriminator, bsize, embed_dim, recom_length, trainSample_dis, validSample_dis, testSample_dis)           
