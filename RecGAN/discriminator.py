@@ -48,6 +48,7 @@ class Discriminator(nn.Module):
         enc_out = enc_out / seq_len.expand_as(enc_out)
          
         # Extract the last hidden layer
-        output = self.enc2out(h.squeeze(0))#batch*hidden
+        output = self.enc2out(enc_out)
+        #output = self.enc2out(h.squeeze(0))#batch*hidden
         output = F.log_softmax(output, dim=1) #batch*n_classes
         return output
