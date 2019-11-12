@@ -1,5 +1,5 @@
 # Model-Based-Reinforcement-Learning-for-Online-Recommendation
-A pytorch implementation of *A Model-Based Reinforcement Learning with Adversarial Training for Online Recommendation*.
+A pytorch implementation of *A Model-Based Reinforcement Learning with Adversarial Training for Online Recommendation* (https://arxiv.org/pdf/1911.03845.pdf).
 
 ## Usage: 
 **In the directory of RecGAN**, type command: 
