@@ -7,8 +7,8 @@ import os
 #from generator import 
                         
 class ReplayMemory(object):
-    def __init__(self, env, policy, capacity, max_length, action_num, recom_length = 10, start_clicks = [None], train=True):
-        self.train = train
+    def __init__(self, env, policy, capacity, max_length, action_num, recom_length = 10, start_clicks = [None], evaluate=False):
+        self.evaluate = evaluate
         self.env = env
         self.policy = policy
         self.capacity = capacity
@@ -31,16 +31,16 @@ class ReplayMemory(object):
     # The agent will give a recommendation list, hidden is the next state                                   
     def select_action(self, click_batch, hidden=None, start=False):     
         if start:
-            outputk, action, hidden = self.policy.forward((click_batch, np.ones(len(click_batch), dtype=int)), self.train)
+            outputk, action, hidden = self.policy.forward((click_batch, np.ones(len(click_batch), dtype=int)), self.evaluate)
         else:
-            outputk, action, hidden = self.policy.step(click_batch, hidden, self.train)
+            outputk, action, hidden = self.policy.step(click_batch, hidden, self.evaluate)
         #Add EOS
         outputk = torch.cat((outputk, torch.ones(outputk.size(0), 1, requires_grad=True).cuda()), 1)
         return outputk, action, hidden
     
     # The input should only be the click list    
     def select_action_testagent(self, click_batch, lengths):
-        _, action = self.policy.forward((click_batch, lengths), self.train)
+        _, action = self.policy.forward((click_batch, lengths), self.evaluate)
         return action
         
     # Action is the recommendation list, hidden is from the environment

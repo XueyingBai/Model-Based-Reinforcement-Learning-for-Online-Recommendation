@@ -87,7 +87,7 @@ def train_user_pred(optims, generator, bsize, embed_dim, recom_length, trainSamp
                 print('saving model at epoch {0}'.format(epoch))
                 if not os.path.exists(outputdir):
                     os.makedirs(outputdir)
-                torch.save(generator.state_dict(), os.path.join(outputdir, 'recGan_gen3.' + outputmodelname))
+                torch.save(generator.state_dict(), os.path.join(outputdir, 'irecGan_gen3.' + outputmodelname))
                 inner_val_acc_best = eval_acc
                 inner_val_preck_best = eval_preck
                 inner_val_rewd_best = eval_rewd
@@ -130,7 +130,7 @@ def train_dis(optims, model, bsize, embed_dim, recom_length, trainSample, validS
                 print('saving model at epoch {0}'.format(epoch))
                 if not os.path.exists(outputdir):
                     os.makedirs(outputdir)
-                torch.save(model.state_dict(), os.path.join(outputdir, 'recGan_dis.' + outputmodelname))
+                torch.save(model.state_dict(), os.path.join(outputdir, 'irecGan_dis.' + outputmodelname))
                 inner_val_acc_best = eval_acc
                 inner_val_map_best = eval_map
                 times_no_improvement = 0
@@ -201,8 +201,8 @@ def pgtrain(optims_gen, optims_dis, generator, agent, discriminator, bsize, embe
             print('saving model at epoch {0}'.format(epoch))
             if not os.path.exists(outputdir):
                 os.makedirs(outputdir)
-            torch.save(agent.state_dict(), os.path.join(outputdir, 'recGan_agent3.' + outputmodelname))
-            torch.save(generator.state_dict(), os.path.join(outputdir, 'recGan_gen3.' + outputmodelname))
+            torch.save(agent.state_dict(), os.path.join(outputdir, 'irecGan_agent3.' + outputmodelname))
+            torch.save(generator.state_dict(), os.path.join(outputdir, 'irecGan_gen3.' + outputmodelname))
             
             inner_val_acc_best = eval_acc
             inner_val_preck_best = eval_preck
@@ -269,10 +269,10 @@ if __name__ == '__main__':
     torch.cuda.manual_seed(seedkey)
     
     #Routes
-    pretrained_gen =  'model_output/recGan_gen3.simu.model.pth'
-    pretrained_dis =  'model_output/recGan_dis.simu.model.pth'
-    pretrained_agent = 'model_output/recGan_agent3.simu.model.pth'
-    final_dis = 'model_output/recGan_dis1.model.simu.pth'
+    pretrained_gen =  'model_output/irecGan_gen3.simu.model.pth'
+    pretrained_dis =  'model_output/irecGan_dis.simu.model.pth'
+    pretrained_agent = 'model_output/irecGan_agent3.simu.model.pth'
+    final_dis = 'model_output/irecGan_dis1.model.simu.pth'
     #Define the writing process
     write_item = 'click_gen.txt'
     write_target = 'tar_gen.txt'

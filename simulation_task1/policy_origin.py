@@ -32,7 +32,7 @@ class Policy(nn.Module):
             init.normal_(param, 0, 1)
             #init.uniform_(param, 0, 1)
              
-    def forward(self, seq, train=True):
+    def forward(self, seq, evaluate=False):
         # seq : (seq, seq_len)
         seq_em, seq_len= seq
         seq_em = self.embedding(seq_em)
@@ -44,7 +44,7 @@ class Policy(nn.Module):
         output = F.softmax(self.enc2out(h.squeeze(0)), dim=1) #batch*hidden
         #indices is with size of batch_size*self.recom
          
-        if not train:
+        if evaluate:
             _, indices = torch.topk(output, self.recom, dim = 1)
         else:
             indices = torch.multinomial(output, self.recom)
@@ -55,7 +55,7 @@ class Policy(nn.Module):
         else:
             return output, indices, h
         
-    def step(self, click, hidden, train=True):
+    def step(self, click, hidden, evaluate=False):
         seq_em = self.embedding(click)
         if self.model == 'LSTM':
             enc_out, (h, c) = self.encoder.step_cell(seq_em, hidden)
@@ -64,7 +64,7 @@ class Policy(nn.Module):
         output = F.softmax(self.enc2out(h.squeeze(0)), dim=1)
         #indices is with size of batch_size*self.recom
          
-        if not train:
+        if evaluate:
             _, indices = torch.topk(output, self.recom, dim = 1)
         else:
             indices = torch.multinomial(output, self.recom)

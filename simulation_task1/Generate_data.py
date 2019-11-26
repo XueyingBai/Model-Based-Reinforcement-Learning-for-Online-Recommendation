@@ -6,7 +6,7 @@ import torch
 from replay_simu import ReplayMemory
 import os
 import sys
-sys.path.append('../RecGAN')
+sys.path.append('../IRecGAN')
 from util import get_args, get_optimizer
 '''
 import pickle
@@ -38,7 +38,7 @@ if __name__ == '__main__':
     if load:
         #Absolute route
         environment = "/home/simulation_task1/model_output/environment.pickle"
-        policy_new = "/home/RecGAN/model_output/agent.pickle"
+        policy_new = "/home/IRecGAN/model_output/agent.pickle"
         env = torch.load(environment)
         policy = torch.load(policy_new)
     else:
@@ -64,7 +64,7 @@ if __name__ == '__main__':
         os.remove(file_reward)
     if os.path.isfile(file_recom):
         os.remove(file_recom)
-    Replay = ReplayMemory(env, policy, capacity, max_length, num_clicks, recom_number, train = False)
+    Replay = ReplayMemory(env, policy, capacity, max_length, num_clicks, recom_number, evaluate=True)
     Replay.gen_sample(bsize)
     Replay.write_sample(file_action, file_reward, file_recom, num_clicks, add_end=False)  
     orig_reward = Replay.rewards.data.cpu().float().sum(1).mean().numpy()

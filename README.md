@@ -1,8 +1,8 @@
 # Model-Based-Reinforcement-Learning-for-Online-Recommendation
-A pytorch implementation of *A Model-Based Reinforcement Learning with Adversarial Training for Online Recommendation* (https://arxiv.org/pdf/1911.03845.pdf).
+A pytorch implementation of *Model-Based Reinforcement Learning with Adversarial Training for Online Recommendation* (https://arxiv.org/pdf/1911.03845.pdf).
 
 ## Usage: 
-**In the directory of RecGAN**, type command: 
+**In the directory of IRecGAN**, type command: 
 
 python main.py --click ../simulation_task1/gen_click.txt --reward ../simulation_task1/gen_reward.txt --action ../simulation_task1/gen_action.txt --model LSTM --nhid 128 --n_layers_usr 2 --optim_nll adam --optim_adv adam --batch_size 128
 
@@ -14,4 +14,4 @@ python Generate_data.py
 
 **Pytorch version: 1.1.0**
 
-**Notice: write for fun and double check. Not the implementation in the paper.** Please refer to the link in the paper for its implementation.
+**Notice: write for fun and double-checking. Not the implementation in the paper.** Please refer to the link in the paper for its implementation.

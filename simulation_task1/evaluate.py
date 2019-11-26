@@ -20,7 +20,7 @@ def GetFileReward(filename, discount=1):
     mean_reward = total_reward/len(rewardline)
     return reward, mean_reward
          
-def Eval(policy_new="/home/RecGAN/model_output/agent.pickle"):
+def Eval(policy_new="/home/IRecGAN/model_output/agent.pickle"):
     #Absolute route
     filename1='/home/simulation_task1/gen_reward.txt'
     _, mean_orig = GetFileReward(filename1)
@@ -42,7 +42,7 @@ def Eval(policy_new="/home/RecGAN/model_output/agent.pickle"):
     capacity = 10000
     max_length = 5
     filename1='/home/simulation_task1/gen_reward.txt'
-    Replay = ReplayMemory(env, policy, capacity, max_length, num_clicks, recom_length, train=False)
+    Replay = ReplayMemory(env, policy, capacity, max_length, num_clicks, recom_length, evaluate=True)
     Replay.gen_sample(bsize)
     #Replay.write_sample('click.txt', 'reward.txt', 'action.txt', num_clicks, add_end=False) 
     mean_new = Replay.rewards.data.cpu().float().sum(1).mean().numpy()
